@@ -24,9 +24,10 @@ class Example(QWidget):
         self.image = QLabel(self)
         self.image.move(0, 0)
         self.image.resize(600, 450)
-        self.p = 0.001
+        self.p = 0.01
         self.spn = f'{self.p},{self.p}'
         self.zoom = 0.001
+        self.s = 0.001
         self.getImage()
         self.setWindowTitle('Maps API')
 
@@ -53,13 +54,30 @@ class Example(QWidget):
         self.image.setPixmap(self.pixmap)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Down:
+        if event.key() == Qt.Key_W:
             if self.p - self.zoom > 0:
                 self.p -= self.zoom
                 self.getImage()
-        if event.key() == Qt.Key_Up:
+        if event.key() == Qt.Key_S:
             if self.p + self.zoom < 80:
                 self.p += self.zoom
+                self.getImage()
+        y, x = map(float, self.ll.split(','))
+        if event.key() == Qt.Key_Right:
+            if y + self.s < 100:
+                self.ll = f'{y + self.s},{x}'
+                self.getImage()
+        if event.key() == Qt.Key_Left:
+            if y - self.s > 0:
+                self.ll = f'{y - self.s},{x}'
+                self.getImage()
+        if event.key() == Qt.Key_Down:
+            if x - self.s > 0:
+                self.ll = f'{y},{x - self.s}'
+                self.getImage()
+        if event.key() == Qt.Key_Up:
+            if x + self.s < 100:
+                self.ll = f'{y},{x + self.s}'
                 self.getImage()
 
     def closeEvent(self, event):
