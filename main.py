@@ -23,6 +23,23 @@ class Example(QWidget):
         self.btn.move(200, 500)
         self.btn.resize(200, 50)
         self.btn.clicked.connect(self.run)
+
+        self.btnsh = QPushButton('Схема', self)
+        self.btnsh.move(10, 550)
+        self.btnsh.resize(150, 50)
+        self.btnsh.clicked.connect(self.maap)
+
+        self.btnsp = QPushButton('Спутник', self)
+        self.btnsp.move(200, 550)
+        self.btnsp.resize(150, 50)
+        self.btnsp.clicked.connect(self.sputnik)
+
+        self.btngb = QPushButton('Гибрид', self)
+        self.btngb.move(390, 550)
+        self.btngb.resize(150, 50)
+        self.btngb.clicked.connect(self.gibrid)
+
+
         self.image = QLabel(self)
         self.image.move(0, 0)
         self.image.resize(600, 450)
@@ -30,6 +47,7 @@ class Example(QWidget):
         self.z = f'{self.p}'
         self.zoom = 1
         self.s = 0.001
+        self.v = 'map'
         self.getImage()
         self.setWindowTitle('Maps API')
 
@@ -39,10 +57,22 @@ class Example(QWidget):
             self.ll = ll
             self.getImage()
 
+    def sputnik(self):
+        self.v = 'sat'
+        self.getImage()
+
+    def gibrid(self):
+        self.v = 'sat,skl'
+        self.getImage()
+
+    def maap(self):
+        self.v = 'map'
+        self.getImage()
+
     def getImage(self):
 
         self.z = self.p
-        map_request = f"http://static-maps.yandex.ru/1.x/?ll={self.ll}&z={self.z}&l=map"
+        map_request = f"http://static-maps.yandex.ru/1.x/?ll={self.ll}&z={self.z}&l={self.v}"
         response = requests.get(map_request)
         if not response:
             print("Ошибка выполнения запроса:")
@@ -57,12 +87,12 @@ class Example(QWidget):
         self.image.setPixmap(self.pixmap)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_W:
+        if event.key() == Qt.Key_S:
             if self.p - self.zoom > 0:
                 self.p -= self.zoom
                 self.s *= 2.5
                 self.getImage()
-        if event.key() == Qt.Key_S:
+        if event.key() == Qt.Key_W:
             if self.p + self.zoom < 24:
                 self.p += self.zoom
                 self.s /= 2.5
