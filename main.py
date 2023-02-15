@@ -26,9 +26,9 @@ class Example(QWidget):
         self.image = QLabel(self)
         self.image.move(0, 0)
         self.image.resize(600, 450)
-        self.p = 0.01
-        self.spn = f'{self.p},{self.p}'
-        self.zoom = 0.001
+        self.p = 15
+        self.z = f'{self.p}'
+        self.zoom = 1
         self.s = 0.001
         self.getImage()
         self.setWindowTitle('Maps API')
@@ -40,8 +40,9 @@ class Example(QWidget):
             self.getImage()
 
     def getImage(self):
-        self.spn = f'{self.p},{self.p}'
-        map_request = f"http://static-maps.yandex.ru/1.x/?ll={self.ll}&spn={self.spn}&l=map"
+
+        self.z = self.p
+        map_request = f"http://static-maps.yandex.ru/1.x/?ll={self.ll}&z={self.z}&l=map"
         response = requests.get(map_request)
         if not response:
             print("Ошибка выполнения запроса:")
@@ -59,10 +60,12 @@ class Example(QWidget):
         if event.key() == Qt.Key_W:
             if self.p - self.zoom > 0:
                 self.p -= self.zoom
+                self.s *= 2.5
                 self.getImage()
         if event.key() == Qt.Key_S:
-            if self.p + self.zoom < 80:
+            if self.p + self.zoom < 24:
                 self.p += self.zoom
+                self.s /= 2.5
                 self.getImage()
         y, x = map(float, self.ll.split(','))
         if event.key() == Qt.Key_Right:
