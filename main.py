@@ -2,8 +2,7 @@ import os
 import sys
 import requests
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QLabel, QPushButton, QInputDialog
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QLabel, QPushButton
 
 
 SCREEN_SIZE = [600, 600]
@@ -16,63 +15,41 @@ class Example(QWidget):
 
     def initUI(self):
         self.setGeometry(100, 100, *SCREEN_SIZE)
-        self.ll_x = 37.530887
-        self.ll_y = 55.703118
-        self.ll = f'{self.ll_x},{self.ll_y}'
-        self.btn = QPushButton('Написать координаты', self)
+        self.tp = QLineEdit('Москва ул Ленина', self)
+        self.tp.move(20, 500)
+        self.tp.resize(150, 25)
+        self.btn = QPushButton('Искать', self)
         self.btn.move(200, 500)
-        self.btn.resize(200, 50)
-        self.btn.clicked.connect(self.run)
-
-        self.btnsh = QPushButton('Схема', self)
-        self.btnsh.move(10, 550)
-        self.btnsh.resize(150, 50)
-        self.btnsh.clicked.connect(self.maap)
-
-        self.btnsp = QPushButton('Спутник', self)
-        self.btnsp.move(200, 550)
-        self.btnsp.resize(150, 50)
-        self.btnsp.clicked.connect(self.sputnik)
-
-        self.btngb = QPushButton('Гибрид', self)
-        self.btngb.move(390, 550)
-        self.btngb.resize(150, 50)
-        self.btngb.clicked.connect(self.gibrid)
-
-
+        self.btn.resize(150, 50)
+        self.btn.clicked.connect(self.getImage)
         self.image = QLabel(self)
         self.image.move(0, 0)
         self.image.resize(600, 450)
-        self.p = 15
-        self.z = f'{self.p}'
-        self.zoom = 1
-        self.s = 0.001
-        self.v = 'map'
         self.getImage()
         self.setWindowTitle('Maps API')
 
-    def run(self):
-        ll, ok_pressed = QInputDialog.getText(self, "Координаты", "Введите координаты")
-        if ok_pressed:
-            self.ll = ll
-            self.getImage()
-
-    def sputnik(self):
-        self.v = 'sat'
-        self.getImage()
-
-    def gibrid(self):
-        self.v = 'sat,skl'
-        self.getImage()
-
-    def maap(self):
-        self.v = 'map'
-        self.getImage()
-
     def getImage(self):
+        geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
 
-        self.z = self.p
-        map_request = f"http://static-maps.yandex.ru/1.x/?ll={self.ll}&z={self.z}&l={self.v}"
+        geocoder_params = {
+            "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+            "geocode": self.tp.text(),
+            "format": "json"}
+
+        response = requests.get(geocoder_api_server, params=geocoder_params)
+
+        if not response:
+            pass
+
+        json_response = response.json()
+        toponym = json_response["response"]["GeoObjectCollection"][
+            "featureMember"][0]["GeoObject"]
+        spn = self.get_spn(json_response)
+
+        toponym_coodrinates = toponym["Point"]["pos"]
+        tlg, tlt = toponym_coodrinates.split(" ")
+
+        map_request = f"http://static-maps.yandex.ru/1.x/?ll={tlg},{tlt}&spn={spn}&pt={tlg},{tlt},pm2dgm2&l=map"
         response = requests.get(map_request)
         if not response:
             print("Ошибка выполнения запроса:")
@@ -86,34 +63,17 @@ class Example(QWidget):
         self.pixmap = QPixmap(self.map_file)
         self.image.setPixmap(self.pixmap)
 
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_S:
-            if self.p - self.zoom > 0:
-                self.p -= self.zoom
-                self.s *= 2.5
-                self.getImage()
-        if event.key() == Qt.Key_W:
-            if self.p + self.zoom < 24:
-                self.p += self.zoom
-                self.s /= 2.5
-                self.getImage()
-        y, x = map(float, self.ll.split(','))
-        if event.key() == Qt.Key_Right:
-            if y + self.s < 100:
-                self.ll = f'{y + self.s},{x}'
-                self.getImage()
-        if event.key() == Qt.Key_Left:
-            if y - self.s > 0:
-                self.ll = f'{y - self.s},{x}'
-                self.getImage()
-        if event.key() == Qt.Key_Down:
-            if x - self.s > 0:
-                self.ll = f'{y},{x - self.s}'
-                self.getImage()
-        if event.key() == Qt.Key_Up:
-            if x + self.s < 100:
-                self.ll = f'{y},{x + self.s}'
-                self.getImage()
+    def get_spn(self, json_response):
+        try:
+            crds = \
+                json_response['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']
+            lc = crds['boundedBy']['Envelope']['lowerCorner'].split()
+            uc = crds['boundedBy']['Envelope']['upperCorner'].split()
+            x = str(abs(float(uc[0]) - float(lc[0])))
+            y = str(abs(float(uc[1]) - float(lc[1])))
+            return f'{x},{y}'
+        except Exception:
+            return '1,1'
 
     def closeEvent(self, event):
         os.remove(self.map_file)
