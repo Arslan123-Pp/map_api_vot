@@ -16,7 +16,9 @@ class Example(QWidget):
 
     def initUI(self):
         self.setGeometry(100, 100, *SCREEN_SIZE)
-        self.ll = '37.530887,55.703118'
+        self.ll_x = 37.530887
+        self.ll_y = 55.703118
+        self.ll = f'{self.ll_x},{self.ll_y}'
         self.btn = QPushButton('Написать координаты', self)
         self.btn.move(200, 500)
         self.btn.resize(200, 50)
@@ -32,7 +34,7 @@ class Example(QWidget):
         self.setWindowTitle('Maps API')
 
     def run(self):
-        ll, ok_pressed = QInputDialog.getText(self, "Введите координаты", "Введите координаты")
+        ll, ok_pressed = QInputDialog.getText(self, "Координаты", "Введите координаты")
         if ok_pressed:
             self.ll = ll
             self.getImage()
