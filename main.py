@@ -19,7 +19,7 @@ class Example(QWidget):
         self.ll_x = 37.530887
         self.ll_y = 55.703118
         self.ll = f'{self.ll_x},{self.ll_y}'
-        self.btn = QPushButton('Написать координаты', self)
+        self.btn = QPushButton('Искать', self)
         self.btn.move(200, 500)
         self.btn.resize(200, 50)
         self.btn.clicked.connect(self.run)
@@ -135,7 +135,8 @@ class Example(QWidget):
                 self.f = False
                 self.getImage()
         if event.key() == Qt.Key_S:
-            if self.p + self.zoom < 24:
+            if self.p + self.zoom < 100:
+                print(1)
                 self.p += self.zoom
                 self.f = False
                 self.getImage()
