@@ -20,22 +20,27 @@ class Example(QWidget):
         self.ll_y = 55.703118
         self.ll = f'{self.ll_x},{self.ll_y}'
         self.btn = QPushButton('Искать', self)
-        self.btn.move(200, 500)
+        self.btn.move(100, 500)
         self.btn.resize(200, 50)
         self.btn.clicked.connect(self.run)
 
+        self.btnr = QPushButton('Сброс результата', self)
+        self.btnr.move(330, 500)
+        self.btnr.resize(200, 50)
+        self.btnr.clicked.connect(self.erase)
+
         self.btnsh = QPushButton('Схема', self)
-        self.btnsh.move(10, 550)
+        self.btnsh.move(30, 550)
         self.btnsh.resize(150, 50)
         self.btnsh.clicked.connect(self.maap)
 
         self.btnsp = QPushButton('Спутник', self)
-        self.btnsp.move(200, 550)
+        self.btnsp.move(230, 550)
         self.btnsp.resize(150, 50)
         self.btnsp.clicked.connect(self.sputnik)
 
         self.btngb = QPushButton('Гибрид', self)
-        self.btngb.move(390, 550)
+        self.btngb.move(420, 550)
         self.btngb.resize(150, 50)
         self.btngb.clicked.connect(self.gibrid)
         self.pts = []
@@ -48,6 +53,7 @@ class Example(QWidget):
         self.s = 0.001
         self.v = 'map'
         self.f = True
+        self.fl = True
         self.getImage()
         self.setWindowTitle('Maps API')
 
@@ -56,6 +62,7 @@ class Example(QWidget):
         if ok_pressed:
             self.ll = ll
             self.f = True
+            self.fl = True
             self.getImage()
 
     def sputnik(self):
@@ -70,6 +77,12 @@ class Example(QWidget):
         self.v = 'map'
         self.getImage()
 
+    def erase(self):
+        if self.fl and self.pts:
+            self.pts = self.pts[:-1]
+            self.fl = False
+            self.f = False
+            self.getImage()
 
     def getImage(self):
         self.spn = f'{self.p},{self.p}'

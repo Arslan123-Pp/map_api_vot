@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="2f73ad21-fbc4-4769-8801-8fdf81e5fdde" name="Changes" comment="add6">
+    <list default="true" id="2f73ad21-fbc4-4769-8801-8fdf81e5fdde" name="Changes" comment="add6 2.0">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -100,7 +100,14 @@
       <option name="project" value="LOCAL" />
       <updated>1676568543567</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="add6 2.0">
+      <created>1676637525448</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1676637525448</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -120,6 +127,7 @@
     <MESSAGE value="add4" />
     <MESSAGE value="add5" />
     <MESSAGE value="add6" />
-    <option name="LAST_COMMIT_MESSAGE" value="add6" />
+    <MESSAGE value="add6 2.0" />
+    <option name="LAST_COMMIT_MESSAGE" value="add6 2.0" />
   </component>
 </project>
