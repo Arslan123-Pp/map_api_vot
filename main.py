@@ -24,7 +24,7 @@ class Example(QWidget):
         self.btn.resize(200, 50)
         self.btn.clicked.connect(self.run)
 
-        self.btnpi = QPushButton('Выкл П.И', self)
+        self.btnpi = QPushButton('Выкл адрес и П.И', self)
         self.btnpi.move(550, 500)
         self.btnpi.resize(150, 50)
         self.btnpi.clicked.connect(self.pi)
@@ -77,9 +77,9 @@ class Example(QWidget):
     def pi(self):
         self.pi = not self.pi
         if self.pi:
-            self.btnpi.setText('Выкл П.И')
+            self.btnpi.setText('Выкл адрес и П.И')
         else:
-            self.btnpi.setText('Вкл П.И')
+            self.btnpi.setText('Вкл адрес и П.И')
         self.getImage()
 
     def run(self):
@@ -152,7 +152,7 @@ class Example(QWidget):
             map_request = \
                 f"http://static-maps.yandex.ru/1.x/?ll={self.ll}&spn={self.spn}&pt={'~'.join(self.pts)}&l={self.v}"
         response = requests.get(map_request)
-        if self.pi and self.address.text():
+        if self.pi:
             self.address.setText(self.adr_txt)
             self.address2.setText(f"Почтовый индекс: {self.pi_txt}")
             self.address2.adjustSize()
@@ -162,6 +162,7 @@ class Example(QWidget):
                 self.pi_txt = s['postal_code']
             else:
                 self.pi_txt = 'None'
+            self.address.setText('')
             self.address2.setText('')
         if not response:
             print("Ошибка выполнения запроса:")
