@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QLabel, QPushButto
 from PyQt5.QtCore import Qt
 
 
-SCREEN_SIZE = [600, 600]
+SCREEN_SIZE = [700, 620]
 
 
 class Example(QWidget):
@@ -54,6 +54,8 @@ class Example(QWidget):
         self.v = 'map'
         self.f = True
         self.fl = True
+        self.address = QLabel(self)
+        self.address.move(10, 600)
         self.getImage()
         self.setWindowTitle('Maps API')
 
@@ -82,6 +84,7 @@ class Example(QWidget):
             self.pts = self.pts[:-1]
             self.fl = False
             self.f = False
+            self.address.setText('')
             self.getImage()
 
     def getImage(self):
@@ -107,6 +110,8 @@ class Example(QWidget):
         toponym_coodrinates = toponym["Point"]["pos"]
         tlg, tlt = toponym_coodrinates.split(" ")
         if self.f is True:
+            self.address.setText(toponym['metaDataProperty']['GeocoderMetaData']['text'])
+            self.address.adjustSize()
             self.pts.append(f'{tlg},{tlt},pm2dgm2')
             map_request = \
                 f"http://static-maps.yandex.ru/1.x/?ll={tlg},{tlt}&spn={spn}&pt={'~'.join(self.pts)}&l={self.v}"
