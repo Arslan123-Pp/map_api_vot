@@ -24,6 +24,18 @@ class Example(QWidget):
         self.btn.resize(200, 50)
         self.btn.clicked.connect(self.run)
 
+        self.btnpi = QPushButton('Выкл П.И', self)
+        self.btnpi.move(550, 500)
+        self.btnpi.resize(150, 50)
+        self.btnpi.clicked.connect(self.pi)
+        self.pi = True
+        self.pi_txt = ''
+
+        self.btnsh = QPushButton('Схема', self)
+        self.btnsh.move(30, 550)
+        self.btnsh.resize(150, 50)
+        self.btnsh.clicked.connect(self.maap)
+
         self.btnr = QPushButton('Сброс результата', self)
         self.btnr.move(330, 500)
         self.btnr.resize(200, 50)
@@ -56,8 +68,18 @@ class Example(QWidget):
         self.fl = True
         self.address = QLabel(self)
         self.address.move(10, 600)
+        self.address2 = QLabel(self)
+        self.address2.move(10, 620)
         self.getImage()
         self.setWindowTitle('Maps API')
+
+    def pi(self):
+        self.pi = not self.pi
+        if self.pi:
+            self.btnpi.setText('Выкл П.И')
+        else:
+            self.btnpi.setText('Вкл П.И')
+        self.getImage()
 
     def run(self):
         ll, ok_pressed = QInputDialog.getText(self, "Координаты", "Введите координаты")
@@ -111,14 +133,14 @@ class Example(QWidget):
         tlg, tlt = toponym_coodrinates.split(" ")
         if self.f is True:
             s = toponym['metaDataProperty']['GeocoderMetaData']['Address']
-            print(s)
+            self.address.setText(f"{s['formatted']}")
+            self.address.adjustSize()
             try:
-                self.address.setText(f"{s['formatted']},\nПочтовый индекс: {s['postal_code']}")
-                self.address.adjustSize()
-            except KeyError:
-                self.address.setText(f"{s['formatted']}")
-                self.address.adjustSize()
-            self.pts.append(f'{tlg},{tlt},pm2dgm2')
+                self.pi_txt = s['postal_code']
+            except Exception:
+                self.pi_txt = 'None'
+            if f'{tlg},{tlt},pm2dgm2' not in self.pts:
+                self.pts.append(f'{tlg},{tlt},pm2dgm2')
             map_request = \
                 f"http://static-maps.yandex.ru/1.x/?ll={tlg},{tlt}&spn={spn}&pt={'~'.join(self.pts)}&l={self.v}"
             self.spn = spn
@@ -128,6 +150,11 @@ class Example(QWidget):
             map_request = \
                 f"http://static-maps.yandex.ru/1.x/?ll={self.ll}&spn={self.spn}&pt={'~'.join(self.pts)}&l={self.v}"
         response = requests.get(map_request)
+        if self.pi and self.address.text():
+            self.address2.setText(f"Почтовый индекс: {self.pi_txt}")
+            self.address2.adjustSize()
+        else:
+            self.address2.setText('')
         if not response:
             print("Ошибка выполнения запроса:")
             print(map_request)
