@@ -70,6 +70,7 @@ class Example(QWidget):
         self.address.move(10, 600)
         self.address2 = QLabel(self)
         self.address2.move(10, 620)
+        self.adr_txt = ''
         self.getImage()
         self.setWindowTitle('Maps API')
 
@@ -131,8 +132,8 @@ class Example(QWidget):
 
         toponym_coodrinates = toponym["Point"]["pos"]
         tlg, tlt = toponym_coodrinates.split(" ")
+        s = toponym['metaDataProperty']['GeocoderMetaData']['Address']
         if self.f is True:
-            s = toponym['metaDataProperty']['GeocoderMetaData']['Address']
             self.address.setText(f"{s['formatted']}")
             self.address.adjustSize()
             try:
@@ -143,6 +144,7 @@ class Example(QWidget):
                 self.pts.append(f'{tlg},{tlt},pm2dgm2')
             map_request = \
                 f"http://static-maps.yandex.ru/1.x/?ll={tlg},{tlt}&spn={spn}&pt={'~'.join(self.pts)}&l={self.v}"
+            self.adr_txt = f"{s['formatted']}"
             self.spn = spn
             self.ll = f'{tlg},{tlt}'
             self.p = float(spn.split(',')[0])
@@ -151,9 +153,15 @@ class Example(QWidget):
                 f"http://static-maps.yandex.ru/1.x/?ll={self.ll}&spn={self.spn}&pt={'~'.join(self.pts)}&l={self.v}"
         response = requests.get(map_request)
         if self.pi and self.address.text():
+            self.address.setText(self.adr_txt)
             self.address2.setText(f"Почтовый индекс: {self.pi_txt}")
             self.address2.adjustSize()
         else:
+            self.adr_txt = f"{s['formatted']}"
+            if 'postal_code' in s:
+                self.pi_txt = s['postal_code']
+            else:
+                self.pi_txt = 'None'
             self.address2.setText('')
         if not response:
             print("Ошибка выполнения запроса:")
