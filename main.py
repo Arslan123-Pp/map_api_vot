@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QLabel, QPushButto
 from PyQt5.QtCore import Qt
 
 
-SCREEN_SIZE = [700, 620]
+SCREEN_SIZE = [700, 640]
 
 
 class Example(QWidget):
@@ -110,8 +110,14 @@ class Example(QWidget):
         toponym_coodrinates = toponym["Point"]["pos"]
         tlg, tlt = toponym_coodrinates.split(" ")
         if self.f is True:
-            self.address.setText(toponym['metaDataProperty']['GeocoderMetaData']['text'])
-            self.address.adjustSize()
+            s = toponym['metaDataProperty']['GeocoderMetaData']['Address']
+            print(s)
+            try:
+                self.address.setText(f"{s['formatted']},\nПочтовый индекс: {s['postal_code']}")
+                self.address.adjustSize()
+            except KeyError:
+                self.address.setText(f"{s['formatted']}")
+                self.address.adjustSize()
             self.pts.append(f'{tlg},{tlt},pm2dgm2')
             map_request = \
                 f"http://static-maps.yandex.ru/1.x/?ll={tlg},{tlt}&spn={spn}&pt={'~'.join(self.pts)}&l={self.v}"
