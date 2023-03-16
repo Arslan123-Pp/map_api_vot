@@ -4,6 +4,7 @@ import requests
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QLabel, QPushButton, QInputDialog
 from PyQt5.QtCore import Qt
+import math
 
 
 SCREEN_SIZE = [700, 640]
@@ -59,9 +60,9 @@ class Example(QWidget):
         self.image = QLabel(self)
         self.image.move(0, 0)
         self.image.resize(600, 450)
-        self.p = 0.01
+        self.p = 15
         self.spn = None
-        self.zoom = 0.1
+        self.zoom = 1
         self.s = 0.001
         self.v = 'map'
         self.f = True
@@ -71,6 +72,7 @@ class Example(QWidget):
         self.address2 = QLabel(self)
         self.address2.move(10, 620)
         self.adr_txt = ''
+        self.llp = self.ll
         self.getImage()
         self.setWindowTitle('Maps API')
 
@@ -111,15 +113,12 @@ class Example(QWidget):
             self.getImage()
 
     def getImage(self):
-        self.spn = f'{self.p},{self.p}'
         self.s = round(self.p, 3)
         geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
-
         geocoder_params = {
             "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
             "geocode": self.ll,
             "format": "json"}
-
         response = requests.get(geocoder_api_server, params=geocoder_params)
 
         if not response:
@@ -129,37 +128,50 @@ class Example(QWidget):
         toponym = json_response["response"]["GeoObjectCollection"][
             "featureMember"][0]["GeoObject"]
         spn = self.get_spn(json_response)
-
         toponym_coodrinates = toponym["Point"]["pos"]
         tlg, tlt = toponym_coodrinates.split(" ")
         s = toponym['metaDataProperty']['GeocoderMetaData']['Address']
         if self.f is True:
-            self.address.setText(f"{s['formatted']}")
-            self.address.adjustSize()
-            try:
-                self.pi_txt = s['postal_code']
-            except Exception:
-                self.pi_txt = 'None'
             if f'{tlg},{tlt},pm2dgm2' not in self.pts:
                 self.pts.append(f'{tlg},{tlt},pm2dgm2')
+            k, q, _ = self.pts[-1].split(',')
+            geocoder_params1 = {
+                "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+                "geocode": f'{k},{q}',
+                "format": "json"}
+            response1 = requests.get(geocoder_api_server, params=geocoder_params1)
+
+            if not response1:
+                pass
+
+            json_response1 = response1.json()
+            toponym1 = json_response1["response"]["GeoObjectCollection"][
+                "featureMember"][0]["GeoObject"]
+            s1 = toponym1['metaDataProperty']['GeocoderMetaData']['Address']
+            self.address.setText(f"{s1['formatted']}")
+            self.address.adjustSize()
+
+            try:
+                self.pi_txt = s1['postal_code']
+            except Exception:
+                self.pi_txt = 'None'
             map_request = \
-                f"http://static-maps.yandex.ru/1.x/?ll={tlg},{tlt}&spn={spn}&pt={'~'.join(self.pts)}&l={self.v}"
-            self.adr_txt = f"{s['formatted']}"
+                f"http://static-maps.yandex.ru/1.x/?ll={tlg},{tlt}&z={self.p}&pt={'~'.join(self.pts)}&l={self.v}"
+            self.adr_txt = f"{s1['formatted']}"
             self.spn = spn
             self.ll = f'{tlg},{tlt}'
-            self.p = float(spn.split(',')[0])
         else:
             map_request = \
-                f"http://static-maps.yandex.ru/1.x/?ll={self.ll}&spn={self.spn}&pt={'~'.join(self.pts)}&l={self.v}"
+                f"http://static-maps.yandex.ru/1.x/?ll={self.ll}&z={self.p}&pt={'~'.join(self.pts)}&l={self.v}"
         response = requests.get(map_request)
         if self.pi:
             self.address.setText(self.adr_txt)
             self.address2.setText(f"Почтовый индекс: {self.pi_txt}")
             self.address2.adjustSize()
         else:
-            self.adr_txt = f"{s['formatted']}"
+            self.adr_txt = f"{s1['formatted']}"
             if 'postal_code' in s:
-                self.pi_txt = s['postal_code']
+                self.pi_txt = s1['postal_code']
             else:
                 self.pi_txt = 'None'
             self.address.setText('')
@@ -189,14 +201,15 @@ class Example(QWidget):
             return '1,1'
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_W:
+        if event.key() == Qt.Key_S:
             if self.p - self.zoom > 0:
                 self.p -= self.zoom
+                self.s *= 2.5
                 self.f = False
                 self.getImage()
-        if event.key() == Qt.Key_S:
-            if self.p + self.zoom < 100:
-                print(1)
+        if event.key() == Qt.Key_W:
+            if self.p + self.zoom < 24:
+                self.s /= 2.5
                 self.p += self.zoom
                 self.f = False
                 self.getImage()
@@ -220,6 +233,21 @@ class Example(QWidget):
             if x + self.s < 100:
                 self.ll = f'{y},{x + self.s}'
                 self.f = False
+                self.getImage()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            x, y = event.x(), event.y()
+            if 600 > x > 0 and 450 > y > 0:
+                px, py = map(float, self.ll.split(','))
+                dy = 225 - y
+                dx = x - 300
+                coord_to_geo_x, coord_to_geo_y = 0.0000428, 0.0000428
+                x1 = px + dx * coord_to_geo_x * 2 ** (15 - self.p)
+                y1 = py + dy * coord_to_geo_y * math.cos(math.radians(py)) * 2 ** (15 - self.p)
+                self.pts.append(f'{x1},{y1},pm2dgm2')
+                self.llp = f'{x1},{y1}'
+                self.f = True
                 self.getImage()
 
     def closeEvent(self, event):
