@@ -10,6 +10,18 @@ import math
 SCREEN_SIZE = [700, 640]
 
 
+def lonlat_distance(a, b):
+    degree_to_meters_factor = 111 * 1000
+    a_lon, a_lat = a
+    b_lon, b_lat = b
+    radians_lattitude = math.radians((a_lat + b_lat) / 2)
+    lat_lon_factor = math.cos(radians_lattitude)
+    dx = abs(a_lon - b_lon) * degree_to_meters_factor * lat_lon_factor
+    dy = abs(a_lat - b_lat) * degree_to_meters_factor
+    distance = math.sqrt(dx * dx + dy * dy)
+    return distance
+
+
 class Example(QWidget):
     def __init__(self):
         super().__init__()
@@ -73,6 +85,7 @@ class Example(QWidget):
         self.address2.move(10, 620)
         self.adr_txt = ''
         self.llp = self.ll
+        self.pts.append(f'{37.530822},{55.702952},pm2dgm2')
         self.getImage()
         self.setWindowTitle('Maps API')
 
@@ -105,7 +118,7 @@ class Example(QWidget):
         self.getImage()
 
     def erase(self):
-        if self.fl and self.pts:
+        if self.pts:
             self.pts = self.pts[:-1]
             self.fl = False
             self.f = False
@@ -132,8 +145,6 @@ class Example(QWidget):
         tlg, tlt = toponym_coodrinates.split(" ")
         s = toponym['metaDataProperty']['GeocoderMetaData']['Address']
         if self.f is True:
-            if f'{tlg},{tlt},pm2dgm2' not in self.pts:
-                self.pts.append(f'{tlg},{tlt},pm2dgm2')
             k, q, _ = self.pts[-1].split(',')
             geocoder_params1 = {
                 "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
@@ -249,6 +260,46 @@ class Example(QWidget):
                 self.llp = f'{x1},{y1}'
                 self.f = True
                 self.getImage()
+        if event.button() == Qt.RightButton:
+            x, y = event.x(), event.y()
+            if 600 > x > 0 and 450 > y > 0:
+                px, py = map(float, self.ll.split(','))
+                dy = 225 - y
+                dx = x - 300
+                coord_to_geo_x, coord_to_geo_y = 0.0000428, 0.0000428
+                x1 = px + dx * coord_to_geo_x * 2 ** (15 - self.p)
+                y1 = py + dy * coord_to_geo_y * math.cos(math.radians(py)) * 2 ** (15 - self.p)
+                search_api_server = "https://search-maps.yandex.ru/v1/"
+                api_key = "dda3ddba-c9ea-4ead-9010-f43fbc15c6e3"
+
+                search_params = {
+                    "apikey": api_key,
+                    "text": 'организация',
+                    "lang": "ru_RU",
+                    'spn': '0.005,0.005',
+                    'rspn': 1,
+                    "ll": f'{x1},{y1}',
+                    "type": "biz"
+                }
+
+                response = requests.get(search_api_server, params=search_params)
+                if not response:
+                    pass
+
+                json_response = response.json()
+                mn = 100000
+                name = ''
+                for organization in json_response["features"]:
+
+                    org_name = organization["properties"]["CompanyMetaData"]["name"]
+                    org_address = organization["properties"]["CompanyMetaData"]["address"]
+                    point = organization["geometry"]["coordinates"]
+                    dst = lonlat_distance(point, [x1, y1])
+                    if dst < mn:
+                        mn = dst
+                        name = f'{org_address}, {org_name}'
+                if mn != 100000:
+                    self.address.setText(name)
 
     def closeEvent(self, event):
         os.remove(self.map_file)
